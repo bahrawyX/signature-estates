@@ -1,29 +1,39 @@
 "use client";
 import * as React from "react";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { MessageCircle, X } from "lucide-react";
+import { Phone } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+const PHONE = "+20 103 331 1133";
+const PHONE_HREF = "tel:+201033311133";
+const WHATSAPP_HREF = "https://wa.me/201033311133";
+
+function WhatsAppIcon({ size = 20 }: { size?: number }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      width={size}
+      height={size}
+      aria-hidden="true"
+    >
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+    </svg>
+  );
+}
 
 export function FloatingContact() {
   const pathname = usePathname();
-  const [expanded, setExpanded] = React.useState(false);
   const [visible, setVisible] = React.useState(false);
 
-  // Hide on the contact page itself, and on the admin panel
   const isContactPage = pathname === "/contact";
   const isAdminPage = pathname.startsWith("/admin");
 
-  // Fade in after a short delay on mount
   React.useEffect(() => {
     const t = setTimeout(() => setVisible(true), 800);
     return () => clearTimeout(t);
   }, []);
-
-  // Collapse when navigating away
-  React.useEffect(() => {
-    setExpanded(false);
-  }, [pathname]);
 
   if (isContactPage || isAdminPage) return null;
 
@@ -34,64 +44,33 @@ export function FloatingContact() {
         visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
       )}
     >
-      {/* Expanded panel */}
-      <div
-        className={cn(
-          "overflow-hidden transition-all duration-400 origin-bottom-right",
-          expanded
-            ? "opacity-100 scale-100 max-h-64"
-            : "opacity-0 scale-95 max-h-0 pointer-events-none"
-        )}
+      {/* WhatsApp button */}
+      <a
+        href={WHATSAPP_HREF}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={`WhatsApp us at ${PHONE}`}
+        className="group relative flex items-center gap-0 overflow-hidden shadow-xl transition-all duration-300 hover:gap-3 bg-[#25D366] hover:bg-[#1ebe5d] text-white px-3.5 py-3.5 hover:px-5"
       >
-        <div className="bg-[var(--color-dark)] border border-[var(--color-gold)]/30 shadow-2xl p-6 flex flex-col gap-4">
-          <p className="font-display text-white text-lg leading-snug">
-            Ready to find your property?
-          </p>
-          <p className="font-sans text-[var(--color-gray-light)] text-sm leading-relaxed">
-            Our advisors are available 7 days a week.
-          </p>
-          <div className="gold-rule" />
-          <div className="flex flex-col gap-2">
-            <Link
-              href="/contact"
-              onClick={() => setExpanded(false)}
-              className="flex items-center justify-center gap-2 bg-[var(--color-gold)] text-black font-accent text-[10px] tracking-[0.22em] uppercase px-5 py-3 hover:bg-[var(--color-gold-dark)] transition-colors"
-            >
-              Send a Message
-            </Link>
-            <a
-              href="tel:+20226149000"
-              className="flex items-center justify-center gap-2 border border-white/15 text-white font-accent text-[10px] tracking-[0.22em] uppercase px-5 py-3 hover:border-[var(--color-gold)] hover:text-[var(--color-gold)] transition-colors"
-            >
-              Call Us
-            </a>
-          </div>
-        </div>
-      </div>
-
-      {/* Trigger button */}
-      <button
-        onClick={() => setExpanded((v) => !v)}
-        aria-label={expanded ? "Close contact panel" : "Contact us"}
-        className={cn(
-          "group flex items-center gap-3 shadow-xl transition-all duration-300",
-          expanded
-            ? "bg-[var(--color-dark)] border border-[var(--color-gold)]/40 px-4 py-3"
-            : "bg-[var(--color-gold)] hover:bg-[var(--color-gold-dark)] px-5 py-3.5"
-        )}
-      >
-        {/* Label — only when collapsed */}
-        {!expanded && (
-          <span className="font-accent text-[10px] tracking-[0.22em] uppercase text-black whitespace-nowrap">
-            Contact Us
-          </span>
-        )}
-
-        {/* Icon */}
-        <span className={cn("transition-transform duration-300", expanded ? "text-white" : "text-black")}>
-          {expanded ? <X size={16} /> : <MessageCircle size={16} />}
+        {/* Label slides in on hover */}
+        <span className="max-w-0 overflow-hidden whitespace-nowrap font-accent text-[10px] tracking-[0.18em] uppercase transition-all duration-300 group-hover:max-w-[160px]">
+          {PHONE}
         </span>
-      </button>
+        <WhatsAppIcon size={20} />
+      </a>
+
+      {/* Phone call button */}
+      <a
+        href={PHONE_HREF}
+        aria-label={`Call us at ${PHONE}`}
+        className="group relative flex items-center gap-0 overflow-hidden shadow-xl transition-all duration-300 hover:gap-3 bg-[var(--color-gold)] hover:bg-[var(--color-gold-dark)] text-black px-3.5 py-3.5 hover:px-5"
+      >
+        {/* Label slides in on hover */}
+        <span className="max-w-0 overflow-hidden whitespace-nowrap font-accent text-[10px] tracking-[0.18em] uppercase transition-all duration-300 group-hover:max-w-[160px]">
+          {PHONE}
+        </span>
+        <Phone size={20} />
+      </a>
     </div>
   );
 }
