@@ -5,18 +5,20 @@ import { cn } from "@/lib/utils";
 interface LogoProps {
   href?: string;
   className?: string;
-  /** "dark" = logo sits on a dark background (hero/footer) — no wrapper needed.
-   *  "light" = logo sits on cream/white — wrap in dark pill so the black-bg mark reads cleanly. */
+  /** "dark" = logo on dark/hero bg  → gold logo (logo.png)
+   *  "light" = logo on cream/white  → black logo (logoDark.png) */
   variant?: "dark" | "light";
   size?: "sm" | "md" | "lg";
 }
 
 export function Logo({ href = "/", className, variant = "dark", size = "md" }: LogoProps) {
   const heights: Record<NonNullable<LogoProps["size"]>, string> = {
-    sm: "h-10",
-    md: "h-[52px]",
-    lg: "h-20",
+    sm: "h-14",
+    md: "h-[68px]",
+    lg: "h-24",
   };
+
+  const src = variant === "light" ? "/logoDark.png" : "/logo.png";
 
   return (
     <Link
@@ -27,21 +29,14 @@ export function Logo({ href = "/", className, variant = "dark", size = "md" }: L
         className
       )}
     >
-      <div
-        className={cn(
-          "transition-all duration-300",
-          variant === "light" && "bg-[var(--color-black)] px-2 py-1"
-        )}
-      >
-        <Image
-          src="/logo.png"
-          alt="Signature Estates"
-          width={200}
-          height={100}
-          className={cn(heights[size], "w-auto object-contain")}
-          priority
-        />
-      </div>
+      <Image
+        src={src}
+        alt="Signature Estates"
+        width={220}
+        height={110}
+        className={cn(heights[size], "w-auto object-contain transition-all duration-300")}
+        priority
+      />
     </Link>
   );
 }
