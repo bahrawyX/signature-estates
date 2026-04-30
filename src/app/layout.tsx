@@ -6,6 +6,7 @@ import { Footer } from "@/components/Footer";
 import { GoldCursor } from "@/components/GoldCursor";
 import { LenisProvider } from "@/components/LenisProvider";
 import { FloatingContact } from "@/components/FloatingContact";
+import { PublicChrome } from "@/components/PublicChrome";
 
 const display = Playfair_Display({
   subsets: ["latin"],
@@ -105,7 +106,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <main id="main" className="min-h-screen">
             {children}
           </main>
-          <Footer />
+          <PublicChrome>
+            <Footer />
+          </PublicChrome>
           <FloatingContact />
         </LenisProvider>
         <script

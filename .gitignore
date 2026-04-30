@@ -28,8 +28,12 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files
+# env files (but commit .env.example)
 .env*
+!.env.example
+
+# NOTE: data-store/ is intentionally tracked — it is the JSON database
+# for the admin panel. Do NOT add it to this gitignore.
 
 # vercel
 .vercel

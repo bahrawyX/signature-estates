@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import { PropertiesClient } from "./PropertiesClient";
+import { properties } from "@/data/properties";
+import { locations } from "@/data/locations";
+import { developers } from "@/data/developers";
 
 export const metadata: Metadata = {
   title: "Properties",
@@ -8,6 +11,15 @@ export const metadata: Metadata = {
   alternates: { canonical: "/properties" },
 };
 
+// Always read fresh data from the JSON store.
+export const dynamic = "force-dynamic";
+
 export default function PropertiesPage() {
-  return <PropertiesClient />;
+  return (
+    <PropertiesClient
+      properties={properties}
+      locations={locations}
+      developers={developers}
+    />
+  );
 }

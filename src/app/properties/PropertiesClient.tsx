@@ -6,12 +6,12 @@ import { FilterBar } from "@/components/FilterBar";
 import { DEFAULT_FILTERS, type FilterState } from "@/lib/propertyTypes";
 import { PropertyCard } from "@/components/PropertyCard";
 import { Button } from "@/components/ui/button";
-import { properties } from "@/data/properties";
 import { Reveal } from "@/components/Reveal";
+import type { Property, Location, Developer } from "@/lib/types";
 
 const PER_PAGE = 9;
 
-function applyFilters(list: typeof properties, f: FilterState) {
+function applyFilters(list: Property[], f: FilterState) {
   return list.filter((p) => {
     if (f.type !== "All" && p.type !== f.type) return false;
     if (f.location !== "All" && p.locationId !== f.location) return false;
@@ -28,7 +28,7 @@ function applyFilters(list: typeof properties, f: FilterState) {
   });
 }
 
-function applySort(list: typeof properties, sort: string) {
+function applySort(list: Property[], sort: string) {
   const arr = [...list];
   switch (sort) {
     case "price-asc": return arr.sort((a, b) => a.priceEGP - b.priceEGP);
@@ -40,20 +40,35 @@ function applySort(list: typeof properties, sort: string) {
   }
 }
 
-function PropertiesInner() {
+interface PropertiesInnerProps {
+  properties: Property[];
+  locations: Location[];
+  developers: Developer[];
+}
+
+function PropertiesInner({ properties, locations, developers }: PropertiesInnerProps) {
   const [filters, setFilters] = React.useState<FilterState>(DEFAULT_FILTERS);
   const [view, setView] = React.useState<"grid" | "list">("grid");
   const [page, setPage] = React.useState(1);
 
   const filtered = React.useMemo(
     () => applySort(applyFilters(properties, filters), filters.sort),
-    [filters]
+    [filters, properties],
   );
 
   React.useEffect(() => setPage(1), [filters]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
   const visible = filtered.slice(0, page * PER_PAGE);
+
+  const locationsById = React.useMemo(
+    () => new Map(locations.map((l) => [l.id, l])),
+    [locations],
+  );
+  const developersById = React.useMemo(
+    () => new Map(developers.map((d) => [d.id, d])),
+    [developers],
+  );
 
   return (
     <>
@@ -80,6 +95,8 @@ function PropertiesInner() {
         onViewChange={setView}
         filters={filters}
         onChange={setFilters}
+        locations={locations}
+        developers={developers}
       />
 
       <section className="py-12 lg:py-16">
@@ -113,7 +130,12 @@ function PropertiesInner() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: (i % 9) * 0.04 }}
                   >
-                    <PropertyCard property={p} view={view} />
+                    <PropertyCard
+                      property={p}
+                      view={view}
+                      location={locationsById.get(p.locationId)}
+                      developer={developersById.get(p.developerId)}
+                    />
                   </motion.div>
                 ))}
               </motion.div>
@@ -139,10 +161,10 @@ function PropertiesInner() {
   );
 }
 
-export function PropertiesClient() {
+export function PropertiesClient(props: PropertiesInnerProps) {
   return (
     <Suspense fallback={<div className="pt-40 px-6 lg:px-12 max-w-[1400px] mx-auto">Loading…</div>}>
-      <PropertiesInner />
+      <PropertiesInner {...props} />
     </Suspense>
   );
 }

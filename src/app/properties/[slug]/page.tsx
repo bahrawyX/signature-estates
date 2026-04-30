@@ -3,8 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Bed, Bath, Square, Building2, Layers, MapPin, Calendar } from "lucide-react";
 import { properties, getProperty, getRelated } from "@/data/properties";
-import { getLocation } from "@/data/locations";
-import { getDeveloper } from "@/data/developers";
+import { locations, getLocation } from "@/data/locations";
+import { developers, getDeveloper } from "@/data/developers";
 import { ImageGallery } from "@/components/ImageGallery";
 import { PropertyCard } from "@/components/PropertyCard";
 import { Reveal } from "@/components/Reveal";
@@ -196,7 +196,14 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
               </div>
             </Reveal>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-              {related.map((p) => <PropertyCard key={p.id} property={p} />)}
+              {related.map((p) => (
+                <PropertyCard
+                  key={p.id}
+                  property={p}
+                  location={locations.find((l) => l.id === p.locationId)}
+                  developer={developers.find((d) => d.id === p.developerId)}
+                />
+              ))}
             </div>
           </div>
         </section>

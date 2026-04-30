@@ -15,8 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { locations } from "@/data/locations";
-import { developers } from "@/data/developers";
+import type { Location, Developer } from "@/lib/types";
 import { formatEGP, cn } from "@/lib/utils";
 import {
   RES_APARTMENTS,
@@ -62,6 +61,8 @@ export function FilterBar({
   filters,
   onChange,
   sticky = true,
+  locations,
+  developers,
 }: {
   total: number;
   view: "grid" | "list";
@@ -69,6 +70,8 @@ export function FilterBar({
   filters: FilterState;
   onChange: (f: FilterState) => void;
   sticky?: boolean;
+  locations: Location[];
+  developers: Developer[];
 }) {
   const [open, setOpen] = React.useState(false);
   const searchParams = useSearchParams();

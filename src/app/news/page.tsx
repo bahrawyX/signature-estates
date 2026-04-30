@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { NewsClient } from "./NewsClient";
+import { news } from "@/data/news";
 
 export const metadata: Metadata = {
   title: "Editorial",
@@ -7,6 +8,8 @@ export const metadata: Metadata = {
   alternates: { canonical: "/news" },
 };
 
+export const dynamic = "force-dynamic";
+
 export default function NewsPage() {
-  return <NewsClient />;
+  return <NewsClient news={news} />;
 }

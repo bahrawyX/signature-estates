@@ -3,14 +3,22 @@ import Image from "next/image";
 import Link from "next/link";
 import { Bed, Bath, Square, MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import type { Property } from "@/lib/types";
-import { getLocation } from "@/data/locations";
-import { getDeveloper } from "@/data/developers";
+import type { Property, Location, Developer } from "@/lib/types";
 import { formatEGP, formatNumber, cn } from "@/lib/utils";
 
-export function PropertyCard({ property, view = "grid" }: { property: Property; view?: "grid" | "list" }) {
-  const location = getLocation(property.locationId);
-  const developer = getDeveloper(property.developerId);
+export function PropertyCard({
+  property,
+  view = "grid",
+  location,
+  developer,
+}: {
+  property: Property;
+  view?: "grid" | "list";
+  /** Pre-resolved location/developer — pass these from server components.
+   *  Without them, only the property's own fields are shown. */
+  location?: Location;
+  developer?: Developer;
+}) {
 
   if (view === "list") {
     return (

@@ -1,98 +1,21 @@
+import fs from "fs";
+import path from "path";
 import type { Developer } from "@/lib/types";
 
-export const developers: Developer[] = [
-  {
-    id: "ora",
-    name: "ORA Developers",
-    shortName: "ORA",
-    established: 2017,
-    description:
-      "A globally minded developer behind some of Egypt's most distinctive masterplans, from ZED to Silver Sands.",
-  },
-  {
-    id: "emaar-misr",
-    name: "Emaar Misr",
-    shortName: "Emaar",
-    established: 2005,
-    description:
-      "The Egyptian arm of Emaar Properties — Mivida, Marassi, Cairo Gate and Uptown Cairo trace back to its drawing board.",
-  },
-  {
-    id: "tmg",
-    name: "Talaat Moustafa Group",
-    shortName: "TMG",
-    established: 1973,
-    description:
-      "Builder of Egypt's largest integrated cities — Madinaty, Al Rehab, Celia and Noor — and the country's most-watched developer.",
-  },
-  {
-    id: "sodic",
-    name: "SODIC",
-    established: 1996,
-    description:
-      "Design-led communities across East and West Cairo and the North Coast — Eastown, Westown, June and Caesar.",
-  },
-  {
-    id: "palm-hills",
-    name: "Palm Hills Developments",
-    shortName: "Palm Hills",
-    established: 2005,
-    description:
-      "A long-running master developer with a deep portfolio across Sheikh Zayed, October, New Cairo and the North Coast.",
-  },
-  {
-    id: "mountain-view",
-    name: "Mountain View",
-    established: 2005,
-    description:
-      "Concept-driven communities — iCity, Aliva, LVLS — defined by clean lines and a distinct lifestyle vocabulary.",
-  },
-  {
-    id: "marakez",
-    name: "Marakez",
-    established: 2014,
-    description:
-      "A retail-first developer expanding into mixed-use destinations across Cairo and the New Capital.",
-  },
-  {
-    id: "hassan-allam",
-    name: "Hassan Allam Properties",
-    shortName: "Hassan Allam",
-    established: 2017,
-    description:
-      "The real estate arm of one of Egypt's oldest engineering houses — Park View, Swanlake and Seasons in Cairo.",
-  },
-  {
-    id: "misr-italia",
-    name: "Misr Italia Properties",
-    shortName: "Misr Italia",
-    established: 1998,
-    description:
-      "Design-forward communities including IL Bosco, Vinci and Kai — a recurring name in Egypt's architectural awards.",
-  },
-  {
-    id: "tatweer-misr",
-    name: "Tatweer Misr",
-    established: 2014,
-    description:
-      "Wellness-led masterplans on the North Coast and Sokhna — Fouka Bay, Il Monte Galala and Bloomfields.",
-  },
-  {
-    id: "inertia",
-    name: "Inertia Egypt",
-    shortName: "Inertia",
-    established: 2007,
-    description:
-      "Compact, design-rich communities in Cairo and on the coast — G-Cribs, Joulz, Jefaira and Brix.",
-  },
-  {
-    id: "lmd",
-    name: "LMD",
-    established: 2007,
-    description:
-      "A regional developer working across Egypt, the UAE and Europe — Three Sixty, Stei8ht and One Ninety in East Cairo.",
-  },
-];
+const FALLBACK: Developer[] = [];
+
+function loadData(): Developer[] {
+  try {
+    const filePath = path.join(process.cwd(), "data-store", "developers.json");
+    const raw = fs.readFileSync(filePath, "utf-8");
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as Developer[]) : FALLBACK;
+  } catch {
+    return FALLBACK;
+  }
+}
+
+export const developers: Developer[] = loadData();
 
 export function getDeveloper(id: string) {
   return developers.find((d) => d.id === id);

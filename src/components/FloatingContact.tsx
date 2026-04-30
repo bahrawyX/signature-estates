@@ -10,8 +10,9 @@ export function FloatingContact() {
   const [expanded, setExpanded] = React.useState(false);
   const [visible, setVisible] = React.useState(false);
 
-  // Hide on the contact page itself
+  // Hide on the contact page itself, and on the admin panel
   const isContactPage = pathname === "/contact";
+  const isAdminPage = pathname.startsWith("/admin");
 
   // Fade in after a short delay on mount
   React.useEffect(() => {
@@ -24,7 +25,7 @@ export function FloatingContact() {
     setExpanded(false);
   }, [pathname]);
 
-  if (isContactPage) return null;
+  if (isContactPage || isAdminPage) return null;
 
   return (
     <div
@@ -42,7 +43,7 @@ export function FloatingContact() {
             : "opacity-0 scale-95 max-h-0 pointer-events-none"
         )}
       >
-        <div className="bg-[var(--color-dark)] border border-[var(--color-gold)]/30 shadow-2xl w-64 p-6 flex flex-col gap-4">
+        <div className="bg-[var(--color-dark)] border border-[var(--color-gold)]/30 shadow-2xl p-6 flex flex-col gap-4">
           <p className="font-display text-white text-lg leading-snug">
             Ready to find your property?
           </p>

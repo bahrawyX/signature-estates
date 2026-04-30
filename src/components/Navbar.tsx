@@ -32,6 +32,9 @@ export function Navbar() {
 
   const onHero = pathname === "/" && !scrolled;
 
+  // Admin panel has its own layout — suppress the public navbar there.
+  if (pathname.startsWith("/admin")) return null;
+
   return (
     <header
       className={cn(

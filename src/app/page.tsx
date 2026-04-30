@@ -11,10 +11,15 @@ import { Reveal, StaggerGroup, StaggerItem } from "@/components/Reveal";
 import { Button } from "@/components/ui/button";
 import { properties } from "@/data/properties";
 import { locations } from "@/data/locations";
+import { developers } from "@/data/developers";
 import { news } from "@/data/news";
+
+export const dynamic = "force-dynamic";
 
 export default function Home() {
   const featured = properties.filter((p) => p.featured).slice(0, 6);
+  const locationsById = new Map(locations.map((l) => [l.id, l]));
+  const developersById = new Map(developers.map((d) => [d.id, d]));
   const featuredLocations = [
     "new-cairo",
     "north-coast-sidi",
@@ -65,7 +70,11 @@ export default function Home() {
           <StaggerGroup className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
             {featured.map((p) => (
               <StaggerItem key={p.id}>
-                <PropertyCard property={p} />
+                <PropertyCard
+                  property={p}
+                  location={locationsById.get(p.locationId)}
+                  developer={developersById.get(p.developerId)}
+                />
               </StaggerItem>
             ))}
           </StaggerGroup>

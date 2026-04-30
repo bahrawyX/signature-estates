@@ -3,10 +3,9 @@ import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { news } from "@/data/news";
 import { Reveal } from "@/components/Reveal";
 import { cn } from "@/lib/utils";
-import type { NewsCategory } from "@/lib/types";
+import type { NewsArticle, NewsCategory } from "@/lib/types";
 
 const CATEGORIES: ("All" | NewsCategory)[] = [
   "All",
@@ -16,7 +15,7 @@ const CATEGORIES: ("All" | NewsCategory)[] = [
   "Lifestyle",
 ];
 
-export function NewsClient() {
+export function NewsClient({ news }: { news: NewsArticle[] }) {
   const [active, setActive] = React.useState<(typeof CATEGORIES)[number]>("All");
   const filtered = active === "All" ? news : news.filter((n) => n.category === active);
 
