@@ -2,7 +2,8 @@
 import * as React from "react";
 import { Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FilterBar, DEFAULT_FILTERS, type FilterState } from "@/components/FilterBar";
+import { FilterBar } from "@/components/FilterBar";
+import { DEFAULT_FILTERS, type FilterState } from "@/lib/propertyTypes";
 import { PropertyCard } from "@/components/PropertyCard";
 import { Button } from "@/components/ui/button";
 import { properties } from "@/data/properties";

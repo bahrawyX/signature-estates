@@ -18,18 +18,20 @@ import {
 import { locations } from "@/data/locations";
 import { developers } from "@/data/developers";
 import { formatEGP, cn } from "@/lib/utils";
+import {
+  RES_APARTMENTS,
+  RES_VILLAS,
+  ALL_SPECIFIC_TYPES,
+  PRICE_MIN,
+  PRICE_MAX,
+  DEFAULT_FILTERS,
+  type FilterState,
+} from "@/lib/propertyTypes";
 
-// ── Type hierarchy ──────────────────────────────────────────
-export const RES_APARTMENTS = ["Flat Apartment", "Loft", "Penthouse", "Garden Apartment", "Duplex"] as const;
-export const RES_VILLAS = ["Standalone Villa", "One Story Villa", "Town House", "Twin House", "Family House"] as const;
-export const COM_SHOPS = ["Retail", "F&B"] as const;
-export const COM_OTHER = ["Office", "Clinic"] as const;
+// Re-export so existing imports from FilterBar still work
+export { DEFAULT_FILTERS, PRICE_MIN, PRICE_MAX };
+export type { FilterState };
 
-export const ALL_SPECIFIC_TYPES: string[] = [
-  ...RES_APARTMENTS, ...RES_VILLAS, "Chalet",
-  ...COM_SHOPS, ...COM_OTHER,
-  "Land",
-];
 const BEDROOMS = ["Any", "Studio", "1", "2", "3", "4", "5+"];
 const STATUSES = ["All", "Ready to Move", "Off-Plan", "Under Construction"];
 const SORTS = [
@@ -38,33 +40,6 @@ const SORTS = [
   { id: "price-desc", label: "Price ↓" },
   { id: "newest", label: "Newest" },
 ];
-
-const PRICE_MIN = 500_000;
-const PRICE_MAX = 100_000_000;
-
-export interface FilterState {
-  type: string;
-  location: string;
-  developer: string;
-  development: string;
-  beds: string;
-  status: string;
-  priceMin: number;
-  priceMax: number;
-  sort: string;
-}
-
-export const DEFAULT_FILTERS: FilterState = {
-  type: "All",
-  location: "All",
-  developer: "All",
-  development: "All",
-  beds: "Any",
-  status: "All",
-  priceMin: PRICE_MIN,
-  priceMax: PRICE_MAX,
-  sort: "featured",
-};
 
 const developments = [
   "All",
@@ -124,7 +99,7 @@ export function FilterBar({
       onChange({
         ...filters,
         type: t && ALL_SPECIFIC_TYPES.includes(t) ? t : filters.type,
-        location: l && (locations.find((x) => x.id === l)) ? l : filters.location,
+        location: l && locations.find((x) => x.id === l) ? l : filters.location,
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -207,14 +182,12 @@ export function FilterBar({
               <SelectLabel className="font-accent text-[9px] tracking-[0.22em] text-[var(--color-gold-dark)] uppercase pt-1">
                 Residential
               </SelectLabel>
-              {/* Apartments */}
               <SelectLabel className="pl-5 text-[10px] text-[var(--color-gray)] font-normal pb-0 pt-1">
                 Apartments
               </SelectLabel>
               {RES_APARTMENTS.map((t) => (
                 <SelectItem key={t} value={t} className="pl-8">{t}</SelectItem>
               ))}
-              {/* Villas */}
               <SelectLabel className="pl-5 text-[10px] text-[var(--color-gray)] font-normal pb-0 pt-1">
                 Villas
               </SelectLabel>
@@ -223,7 +196,6 @@ export function FilterBar({
                   {t === "Standalone Villa" ? "Standalone" : t === "One Story Villa" ? "One Story" : t}
                 </SelectItem>
               ))}
-              {/* Beach & Resort */}
               <SelectLabel className="pl-5 text-[10px] text-[var(--color-gray)] font-normal pb-0 pt-1">
                 Beach & Resort
               </SelectLabel>
@@ -236,13 +208,11 @@ export function FilterBar({
               <SelectLabel className="font-accent text-[9px] tracking-[0.22em] text-[var(--color-gold-dark)] uppercase pt-1">
                 Commercial
               </SelectLabel>
-              {/* Shops */}
               <SelectLabel className="pl-5 text-[10px] text-[var(--color-gray)] font-normal pb-0 pt-1">
                 Shops
               </SelectLabel>
               <SelectItem value="Retail" className="pl-8">Retail</SelectItem>
               <SelectItem value="F&B" className="pl-8">Food & Beverage (F&B)</SelectItem>
-              {/* Other commercial */}
               <SelectItem value="Office" className="pl-5">Offices</SelectItem>
               <SelectItem value="Clinic" className="pl-5">Clinics</SelectItem>
             </SelectGroup>
@@ -331,7 +301,6 @@ export function FilterBar({
       {headerRow}
       <div className="hidden lg:block border-t border-black/5">{fields}</div>
 
-      {/* Active filter chips + reset */}
       {activeCount > 0 && (
         <div className="hidden lg:flex items-center gap-3 px-6 lg:px-12 pb-5 flex-wrap">
           <span className="font-accent text-[10px] tracking-[0.2em] text-[var(--color-gray)]">
@@ -346,7 +315,6 @@ export function FilterBar({
         </div>
       )}
 
-      {/* Mobile drawer */}
       {open && (
         <div className="lg:hidden border-t border-black/10">
           <div className="flex items-center justify-between px-6 py-4 border-b border-black/5">
