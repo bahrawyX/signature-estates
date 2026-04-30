@@ -28,10 +28,6 @@ import {
   type FilterState,
 } from "@/lib/propertyTypes";
 
-// Re-export so existing imports from FilterBar still work
-export { DEFAULT_FILTERS, PRICE_MIN, PRICE_MAX };
-export type { FilterState };
-
 const BEDROOMS = ["Any", "Studio", "1", "2", "3", "4", "5+"];
 const STATUSES = ["All", "Ready to Move", "Off-Plan", "Under Construction"];
 const SORTS = [
@@ -168,8 +164,8 @@ export function FilterBar({
     </div>
   );
 
-  const fields = (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-x-6 gap-y-5 px-6 lg:px-12 pb-6">
+  const fields = ( 
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-x-6 gap-y-5 px-6 lg:px-12 p-6">
       <Field label="Property Type">
         <Select value={filters.type} onValueChange={(v) => update("type", v)}>
           <SelectTrigger><SelectValue /></SelectTrigger>
