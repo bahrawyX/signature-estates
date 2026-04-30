@@ -13,9 +13,9 @@ interface LogoProps {
 
 export function Logo({ href = "/", className, variant = "dark", size = "md" }: LogoProps) {
   const heights: Record<NonNullable<LogoProps["size"]>, string> = {
-    sm: "h-14",
-    md: "h-[68px]",
-    lg: "h-24",
+    sm: "h-16",
+    md: "h-[100px]",
+    lg: "h-32",
   };
 
   const src = variant === "light" ? "/logoDark.png" : "/logo.png";
@@ -32,8 +32,8 @@ export function Logo({ href = "/", className, variant = "dark", size = "md" }: L
       <Image
         src={src}
         alt="Signature Estates"
-        width={220}
-        height={110}
+        width={320}
+        height={160}
         className={cn(heights[size], "w-auto object-contain transition-all duration-300")}
         priority
       />

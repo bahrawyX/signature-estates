@@ -37,8 +37,8 @@ export function Navbar() {
       className={cn(
         "fixed top-0 inset-x-0 z-50 transition-all duration-500",
         scrolled
-          ? "bg-[var(--color-cream)]/95 backdrop-blur-md border-b border-black/8 py-4"
-          : "py-7",
+          ? "bg-[var(--color-cream)]/95 backdrop-blur-md border-b border-black/8 py-2"
+          : "py-5",
         onHero && "text-white"
       )}
     >
