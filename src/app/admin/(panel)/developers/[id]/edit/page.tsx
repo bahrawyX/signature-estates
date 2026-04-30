@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { readOne } from "@/lib/data-store";
+import { dbAdminGetDeveloper } from "@/lib/db";
 import { DeveloperForm } from "../../DeveloperForm";
 
 export const dynamic = "force-dynamic";
@@ -10,7 +10,7 @@ export default async function EditDeveloperPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const developer = readOne("developers", id);
+  const developer = await dbAdminGetDeveloper(id);
   if (!developer) notFound();
   return <DeveloperForm mode="edit" developer={developer} />;
 }

@@ -2,9 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Bed, Bath, Square, Building2, Layers, MapPin, Calendar } from "lucide-react";
-import { properties, getProperty, getRelated } from "@/data/properties";
-import { locations, getLocation } from "@/data/locations";
-import { developers, getDeveloper } from "@/data/developers";
+import {
+  getProperty,
+  getRelated,
+  dbGetAllPropertySlugs,
+} from "@/data/properties";
+import { getLocation } from "@/data/locations";
+import { getDeveloper } from "@/data/developers";
 import { ImageGallery } from "@/components/ImageGallery";
 import { PropertyCard } from "@/components/PropertyCard";
 import { Reveal } from "@/components/Reveal";
@@ -16,14 +20,15 @@ import { Badge } from "@/components/ui/badge";
 import { formatEGP, formatNumber } from "@/lib/utils";
 
 export async function generateStaticParams() {
-  return properties.map((p) => ({ slug: p.slug }));
+  const slugs = await dbGetAllPropertySlugs();
+  return slugs.map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const property = getProperty(slug);
+  const property = await getProperty(slug);
   if (!property) return {};
-  const location = getLocation(property.locationId);
+  const location = await getLocation(property.locationId);
   return {
     title: property.name,
     description: `${property.type} · ${location?.name} · ${formatEGP(property.priceEGP)}. ${property.description.slice(0, 140)}…`,
@@ -38,11 +43,27 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function PropertyPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const property = getProperty(slug);
+  const property = await getProperty(slug);
   if (!property) notFound();
-  const location = getLocation(property.locationId);
-  const developer = getDeveloper(property.developerId);
-  const related = getRelated(slug, 3);
+  const [location, developer, related] = await Promise.all([
+    getLocation(property.locationId),
+    getDeveloper(property.developerId),
+    getRelated(slug, property.locationId, property.type, 3),
+  ]);
+
+  // Resolve related properties' location + developer in one batched fetch.
+  const relatedLocationIds = Array.from(new Set(related.map((r) => r.locationId)));
+  const relatedDeveloperIds = Array.from(new Set(related.map((r) => r.developerId)));
+  const [relatedLocations, relatedDevelopers] = await Promise.all([
+    Promise.all(relatedLocationIds.map((id) => getLocation(id))),
+    Promise.all(relatedDeveloperIds.map((id) => getDeveloper(id))),
+  ]);
+  const relatedLocationsById = new Map(
+    relatedLocations.filter(Boolean).map((l) => [l!.id, l!]),
+  );
+  const relatedDevelopersById = new Map(
+    relatedDevelopers.filter(Boolean).map((d) => [d!.id, d!]),
+  );
 
   return (
     <>
@@ -200,8 +221,8 @@ export default async function PropertyPage({ params }: { params: Promise<{ slug:
                 <PropertyCard
                   key={p.id}
                   property={p}
-                  location={locations.find((l) => l.id === p.locationId)}
-                  developer={developers.find((d) => d.id === p.developerId)}
+                  location={relatedLocationsById.get(p.locationId)}
+                  developer={relatedDevelopersById.get(p.developerId)}
                 />
               ))}
             </div>

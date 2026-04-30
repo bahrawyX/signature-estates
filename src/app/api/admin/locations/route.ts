@@ -1,14 +1,25 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
-import { readAll, createOne } from "@/lib/data-store";
+import {
+  dbAdminGetAllLocations,
+  dbAdminCreateLocation,
+  dbAdminLocationIdTaken,
+} from "@/lib/db";
 import { slugify } from "@/lib/utils";
 import type { Location } from "@/lib/types";
 
 export const runtime = "nodejs";
 
 export async function GET() {
-  const items = readAll("locations");
-  return NextResponse.json({ items });
+  try {
+    const items = await dbAdminGetAllLocations();
+    return NextResponse.json({ items });
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Server error" },
+      { status: 500 },
+    );
+  }
 }
 
 export async function POST(req: Request) {
@@ -26,26 +37,31 @@ export async function POST(req: Request) {
     );
   }
 
-  // Locations use a slug-style id (e.g. "new-cairo"). Ensure uniqueness.
-  const all = readAll("locations");
-  const taken = new Set(all.map((l) => l.id));
-  const baseId = slugify(body.name);
-  let id = baseId;
-  let i = 2;
-  while (taken.has(id)) id = `${baseId}-${i++}`;
+  try {
+    const baseId = slugify(body.name);
+    let id = baseId;
+    let i = 2;
+    while (await dbAdminLocationIdTaken(id)) {
+      id = `${baseId}-${i++}`;
+      if (i > 100) break;
+    }
 
-  const newItem: Location = {
-    id,
-    name: body.name,
-    arabicName: body.arabicName ?? undefined,
-    region: body.region,
-    description: body.description ?? "",
-    image: body.image ?? "",
-  };
+    const newItem: Location = {
+      id,
+      name: body.name,
+      arabicName: body.arabicName ?? undefined,
+      region: body.region,
+      description: body.description ?? "",
+      image: body.image ?? "",
+    };
 
-  createOne("locations", newItem);
-  revalidatePath("/");
-  revalidatePath("/properties");
-
-  return NextResponse.json({ item: newItem }, { status: 201 });
+    const created = await dbAdminCreateLocation(newItem);
+    revalidatePath("/", "layout");
+    return NextResponse.json({ item: created }, { status: 201 });
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Server error" },
+      { status: 500 },
+    );
+  }
 }

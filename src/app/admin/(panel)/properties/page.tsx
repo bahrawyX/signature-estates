@@ -1,12 +1,18 @@
-import { readAll } from "@/lib/data-store";
+import {
+  dbAdminGetAllProperties,
+  dbAdminGetAllLocations,
+  dbAdminGetAllDevelopers,
+} from "@/lib/db";
 import { PropertiesAdminClient } from "./PropertiesAdminClient";
 
 export const dynamic = "force-dynamic";
 
-export default function AdminPropertiesPage() {
-  const properties = readAll("properties");
-  const locations = readAll("locations");
-  const developers = readAll("developers");
+export default async function AdminPropertiesPage() {
+  const [properties, locations, developers] = await Promise.all([
+    dbAdminGetAllProperties(),
+    dbAdminGetAllLocations(),
+    dbAdminGetAllDevelopers(),
+  ]);
 
   return (
     <PropertiesAdminClient

@@ -1,14 +1,26 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
-import { readAll, createOne, generateId, uniqueSlug } from "@/lib/data-store";
+import {
+  dbAdminGetAllArticles,
+  dbAdminCreateArticle,
+  dbAdminGenerateId,
+  dbAdminUniqueSlug,
+} from "@/lib/db";
 import { slugify } from "@/lib/utils";
 import type { NewsArticle } from "@/lib/types";
 
 export const runtime = "nodejs";
 
 export async function GET() {
-  const items = readAll("news");
-  return NextResponse.json({ items });
+  try {
+    const items = await dbAdminGetAllArticles();
+    return NextResponse.json({ items });
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Server error" },
+      { status: 500 },
+    );
+  }
 }
 
 export async function POST(req: Request) {
@@ -26,27 +38,31 @@ export async function POST(req: Request) {
     );
   }
 
-  const id = generateId("news");
-  const baseSlug = body.slug ? slugify(body.slug) : slugify(body.title);
-  const slug = uniqueSlug("news", baseSlug);
+  try {
+    const id = await dbAdminGenerateId("news");
+    const baseSlug = body.slug ? slugify(body.slug) : slugify(body.title);
+    const slug = await dbAdminUniqueSlug("news", baseSlug);
 
-  const newItem: NewsArticle = {
-    id,
-    slug,
-    title: body.title,
-    excerpt: body.excerpt ?? "",
-    body: Array.isArray(body.body) ? body.body : [],
-    category: body.category,
-    author: body.author,
-    publishedAt: body.publishedAt ?? new Date().toISOString().slice(0, 10),
-    readMinutes: Number(body.readMinutes ?? 3),
-    cover: body.cover ?? "",
-  };
+    const newItem: NewsArticle = {
+      id,
+      slug,
+      title: body.title,
+      excerpt: body.excerpt ?? "",
+      body: Array.isArray(body.body) ? body.body : [],
+      category: body.category,
+      author: body.author,
+      publishedAt: body.publishedAt ?? new Date().toISOString().slice(0, 10),
+      readMinutes: Number(body.readMinutes ?? 3),
+      cover: body.cover ?? "",
+    };
 
-  createOne("news", newItem);
-  revalidatePath("/");
-  revalidatePath("/news");
-  revalidatePath(`/news/${slug}`);
-
-  return NextResponse.json({ item: newItem }, { status: 201 });
+    const created = await dbAdminCreateArticle(newItem);
+    revalidatePath("/", "layout");
+    return NextResponse.json({ item: created }, { status: 201 });
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Server error" },
+      { status: 500 },
+    );
+  }
 }

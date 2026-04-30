@@ -1,5 +1,9 @@
 import { notFound } from "next/navigation";
-import { readAll, readOne } from "@/lib/data-store";
+import {
+  dbAdminGetProperty,
+  dbAdminGetAllLocations,
+  dbAdminGetAllDevelopers,
+} from "@/lib/db";
 import { PropertyForm } from "../../PropertyForm";
 
 export const dynamic = "force-dynamic";
@@ -10,11 +14,12 @@ export default async function EditPropertyPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const property = readOne("properties", id);
+  const [property, locations, developers] = await Promise.all([
+    dbAdminGetProperty(id),
+    dbAdminGetAllLocations(),
+    dbAdminGetAllDevelopers(),
+  ]);
   if (!property) notFound();
-
-  const locations = readAll("locations");
-  const developers = readAll("developers");
 
   return (
     <PropertyForm

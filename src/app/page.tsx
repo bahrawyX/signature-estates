@@ -9,17 +9,25 @@ import { NewsletterStrip } from "@/components/NewsletterStrip";
 import { SectionHeader } from "@/components/SectionHeader";
 import { Reveal, StaggerGroup, StaggerItem } from "@/components/Reveal";
 import { Button } from "@/components/ui/button";
-import { properties } from "@/data/properties";
-import { locations } from "@/data/locations";
-import { developers } from "@/data/developers";
-import { news } from "@/data/news";
+import { getAllProperties, getFeaturedProperties } from "@/data/properties";
+import { getAllLocations } from "@/data/locations";
+import { getAllDevelopers } from "@/data/developers";
+import { getAllArticles } from "@/data/news";
 
 export const dynamic = "force-dynamic";
 
-export default function Home() {
-  const featured = properties.filter((p) => p.featured).slice(0, 6);
-  const locationsById = new Map(locations.map((l) => [l.id, l]));
-  const developersById = new Map(developers.map((d) => [d.id, d]));
+export default async function Home() {
+  const [featured, allProperties, allLocations, allDevelopers, latestNews] =
+    await Promise.all([
+      getFeaturedProperties(6),
+      getAllProperties(),
+      getAllLocations(),
+      getAllDevelopers(),
+      getAllArticles(),
+    ]);
+
+  const locationsById = new Map(allLocations.map((l) => [l.id, l]));
+  const developersById = new Map(allDevelopers.map((d) => [d.id, d]));
   const featuredLocations = [
     "new-cairo",
     "north-coast-sidi",
@@ -28,13 +36,13 @@ export default function Home() {
     "new-capital",
     "sheikh-zayed",
   ]
-    .map((id) => locations.find((l) => l.id === id))
-    .filter(Boolean) as typeof locations;
+    .map((id) => allLocations.find((l) => l.id === id))
+    .filter(Boolean) as typeof allLocations;
 
   const propertyCounts = (id: string) =>
-    properties.filter((p) => p.locationId === id).length;
+    allProperties.filter((p) => p.locationId === id).length;
 
-  const latestNews = news.slice(0, 3);
+  const articles = latestNews.slice(0, 3);
 
   return (
     <>
@@ -243,7 +251,7 @@ export default function Home() {
           </div>
 
           <StaggerGroup className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {latestNews.map((article) => (
+            {articles.map((article) => (
               <StaggerItem key={article.id}>
                 <Link href={`/news/${article.slug}`} className="group block">
                   <div className="relative aspect-[4/5] overflow-hidden mb-6">

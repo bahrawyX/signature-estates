@@ -1,10 +1,12 @@
-import { readAll } from "@/lib/data-store";
+import { dbAdminGetAllLocations, dbAdminGetAllDevelopers } from "@/lib/db";
 import { PropertyForm } from "../PropertyForm";
 
 export const dynamic = "force-dynamic";
 
-export default function NewPropertyPage() {
-  const locations = readAll("locations");
-  const developers = readAll("developers");
+export default async function NewPropertyPage() {
+  const [locations, developers] = await Promise.all([
+    dbAdminGetAllLocations(),
+    dbAdminGetAllDevelopers(),
+  ]);
   return <PropertyForm mode="new" locations={locations} developers={developers} />;
 }

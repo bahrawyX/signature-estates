@@ -1,23 +1,32 @@
 import Link from "next/link";
 import { Building2, MapPin, Briefcase, Newspaper, Plus } from "lucide-react";
-import { readAll } from "@/lib/data-store";
+import {
+  dbAdminGetAllProperties,
+  dbAdminGetAllLocations,
+  dbAdminGetAllDevelopers,
+  dbAdminGetAllArticles,
+} from "@/lib/db";
 import { StatsCard } from "@/components/admin/StatsCard";
 import { formatEGP } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
-export default function AdminDashboardPage() {
-  const properties = readAll("properties");
-  const locations = readAll("locations");
-  const developers = readAll("developers");
-  const news = readAll("news");
+export default async function AdminDashboardPage() {
+  const [properties, locations, developers, news] = await Promise.all([
+    dbAdminGetAllProperties(),
+    dbAdminGetAllLocations(),
+    dbAdminGetAllDevelopers(),
+    dbAdminGetAllArticles(),
+  ]);
 
   const ready = properties.filter((p) => p.status === "Ready to Move").length;
   const offPlan = properties.filter((p) => p.status === "Off-Plan").length;
   const underConstr = properties.filter((p) => p.status === "Under Construction").length;
   const featured = properties.filter((p) => p.featured).length;
 
-  const recentProperties = [...properties].slice(-5).reverse();
+  // properties from dbAdminGetAllProperties() are sorted desc by created_at, so
+  // the first 5 are the most recent.
+  const recentProperties = properties.slice(0, 5);
   const recentNews = [...news]
     .sort((a, b) => b.publishedAt.localeCompare(a.publishedAt))
     .slice(0, 3);

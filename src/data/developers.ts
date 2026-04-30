@@ -1,22 +1,10 @@
-import fs from "fs";
-import path from "path";
 import type { Developer } from "@/lib/types";
+import { dbGetAllDevelopers, dbGetDeveloper } from "@/lib/db";
 
-const FALLBACK: Developer[] = [];
+export {
+  dbGetAllDevelopers as getAllDevelopers,
+  dbGetDeveloper as getDeveloper,
+};
 
-function loadData(): Developer[] {
-  try {
-    const filePath = path.join(process.cwd(), "data-store", "developers.json");
-    const raw = fs.readFileSync(filePath, "utf-8");
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? (parsed as Developer[]) : FALLBACK;
-  } catch {
-    return FALLBACK;
-  }
-}
-
-export const developers: Developer[] = loadData();
-
-export function getDeveloper(id: string) {
-  return developers.find((d) => d.id === id);
-}
+// Legacy export — async migration required at the call site.
+export const developers: Developer[] = [];

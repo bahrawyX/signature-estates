@@ -1,14 +1,25 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
-import { readAll, createOne } from "@/lib/data-store";
+import {
+  dbAdminGetAllDevelopers,
+  dbAdminCreateDeveloper,
+  dbAdminDeveloperIdTaken,
+} from "@/lib/db";
 import { slugify } from "@/lib/utils";
 import type { Developer } from "@/lib/types";
 
 export const runtime = "nodejs";
 
 export async function GET() {
-  const items = readAll("developers");
-  return NextResponse.json({ items });
+  try {
+    const items = await dbAdminGetAllDevelopers();
+    return NextResponse.json({ items });
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Server error" },
+      { status: 500 },
+    );
+  }
 }
 
 export async function POST(req: Request) {
@@ -23,25 +34,30 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Missing required field: name" }, { status: 400 });
   }
 
-  const all = readAll("developers");
-  const taken = new Set(all.map((d) => d.id));
-  const baseId = slugify(body.shortName ?? body.name);
-  let id = baseId;
-  let i = 2;
-  while (taken.has(id)) id = `${baseId}-${i++}`;
+  try {
+    const baseId = slugify(body.shortName ?? body.name);
+    let id = baseId;
+    let i = 2;
+    while (await dbAdminDeveloperIdTaken(id)) {
+      id = `${baseId}-${i++}`;
+      if (i > 100) break;
+    }
 
-  const newItem: Developer = {
-    id,
-    name: body.name,
-    shortName: body.shortName || undefined,
-    established: Number(body.established ?? new Date().getFullYear()),
-    description: body.description ?? "",
-  };
+    const newItem: Developer = {
+      id,
+      name: body.name,
+      shortName: body.shortName || undefined,
+      established: Number(body.established ?? new Date().getFullYear()),
+      description: body.description ?? "",
+    };
 
-  createOne("developers", newItem);
-  revalidatePath("/");
-  revalidatePath("/developers");
-  revalidatePath("/properties");
-
-  return NextResponse.json({ item: newItem }, { status: 201 });
+    const created = await dbAdminCreateDeveloper(newItem);
+    revalidatePath("/", "layout");
+    return NextResponse.json({ item: created }, { status: 201 });
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Server error" },
+      { status: 500 },
+    );
+  }
 }

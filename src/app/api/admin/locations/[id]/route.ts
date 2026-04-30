@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
-import { readOne, updateOne, deleteOne } from "@/lib/data-store";
+import {
+  dbAdminGetLocation,
+  dbAdminUpdateLocation,
+  dbAdminDeleteLocation,
+} from "@/lib/db";
 import type { Location } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -10,9 +14,16 @@ export async function GET(
   ctx: { params: Promise<{ id: string }> },
 ) {
   const { id } = await ctx.params;
-  const item = readOne("locations", id);
-  if (!item) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  return NextResponse.json({ item });
+  try {
+    const item = await dbAdminGetLocation(id);
+    if (!item) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json({ item });
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Server error" },
+      { status: 500 },
+    );
+  }
 }
 
 export async function PUT(
@@ -26,13 +37,19 @@ export async function PUT(
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
-  const patch = { ...body };
-  delete (patch as Record<string, unknown>).id;
-  const updated = updateOne("locations", id, patch);
-  if (!updated) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  revalidatePath("/");
-  revalidatePath("/properties");
-  return NextResponse.json({ item: updated });
+
+  try {
+    const patch = { ...body };
+    delete (patch as Record<string, unknown>).id;
+    const updated = await dbAdminUpdateLocation(id, patch);
+    revalidatePath("/", "layout");
+    return NextResponse.json({ item: updated });
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Server error" },
+      { status: 500 },
+    );
+  }
 }
 
 export async function DELETE(
@@ -40,9 +57,14 @@ export async function DELETE(
   ctx: { params: Promise<{ id: string }> },
 ) {
   const { id } = await ctx.params;
-  const ok = deleteOne("locations", id);
-  if (!ok) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  revalidatePath("/");
-  revalidatePath("/properties");
-  return NextResponse.json({ ok: true });
+  try {
+    await dbAdminDeleteLocation(id);
+    revalidatePath("/", "layout");
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Server error" },
+      { status: 500 },
+    );
+  }
 }

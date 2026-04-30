@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import {
-  readOne,
-  updateOne,
-  deleteOne,
-  uniqueSlug,
-} from "@/lib/data-store";
+  dbAdminGetProperty,
+  dbAdminUpdateProperty,
+  dbAdminDeleteProperty,
+  dbAdminUniqueSlug,
+} from "@/lib/db";
 import { slugify } from "@/lib/utils";
 import type { Property } from "@/lib/types";
 
@@ -16,9 +16,16 @@ export async function GET(
   ctx: { params: Promise<{ id: string }> },
 ) {
   const { id } = await ctx.params;
-  const item = readOne("properties", id);
-  if (!item) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  return NextResponse.json({ item });
+  try {
+    const item = await dbAdminGetProperty(id);
+    if (!item) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json({ item });
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Server error" },
+      { status: 500 },
+    );
+  }
 }
 
 export async function PUT(
@@ -33,51 +40,52 @@ export async function PUT(
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const existing = readOne("properties", id);
-  if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  try {
+    const existing = await dbAdminGetProperty(id);
+    if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  // If slug or name changed, recompute and dedupe.
-  let slug = existing.slug;
-  if (body.slug && body.slug !== existing.slug) {
-    slug = uniqueSlug("properties", slugify(body.slug), id);
-  } else if (body.name && body.name !== existing.name && !body.slug) {
-    // Only auto-rebuild slug from name if user didn't supply one.
-    slug = uniqueSlug("properties", slugify(body.name), id);
+    // Slug regeneration if changed
+    let slug: string | undefined;
+    if (body.slug && body.slug !== existing.slug) {
+      slug = await dbAdminUniqueSlug("properties", slugify(body.slug), id);
+    } else if (body.name && body.name !== existing.name && !body.slug) {
+      slug = await dbAdminUniqueSlug("properties", slugify(body.name), id);
+    }
+
+    const patch: Partial<Property> = {
+      ...body,
+      ...(slug ? { slug } : {}),
+      bedrooms: body.bedrooms !== undefined ? Number(body.bedrooms) : undefined,
+      bathrooms: body.bathrooms !== undefined ? Number(body.bathrooms) : undefined,
+      areaSqm: body.areaSqm !== undefined ? Number(body.areaSqm) : undefined,
+      floor:
+        body.floor !== undefined && body.floor !== null
+          ? Number(body.floor)
+          : undefined,
+      priceEGP: body.priceEGP !== undefined ? Number(body.priceEGP) : undefined,
+      deliveryYear:
+        body.deliveryYear !== undefined && body.deliveryYear !== null
+          ? Number(body.deliveryYear)
+          : undefined,
+      featured: body.featured !== undefined ? Boolean(body.featured) : undefined,
+    };
+    delete (patch as Record<string, unknown>).id;
+    // Drop undefined keys so we don't overwrite columns with NULL.
+    for (const k of Object.keys(patch)) {
+      if ((patch as Record<string, unknown>)[k] === undefined) {
+        delete (patch as Record<string, unknown>)[k];
+      }
+    }
+
+    const updated = await dbAdminUpdateProperty(id, patch);
+    revalidatePath("/", "layout");
+    return NextResponse.json({ item: updated });
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Server error" },
+      { status: 500 },
+    );
   }
-
-  const patch: Partial<Property> = {
-    ...body,
-    slug,
-    bedrooms: body.bedrooms !== undefined ? Number(body.bedrooms) : existing.bedrooms,
-    bathrooms: body.bathrooms !== undefined ? Number(body.bathrooms) : existing.bathrooms,
-    areaSqm: body.areaSqm !== undefined ? Number(body.areaSqm) : existing.areaSqm,
-    floor:
-      body.floor !== undefined && body.floor !== null
-        ? Number(body.floor)
-        : body.floor === null
-        ? undefined
-        : existing.floor,
-    priceEGP: body.priceEGP !== undefined ? Number(body.priceEGP) : existing.priceEGP,
-    deliveryYear:
-      body.deliveryYear !== undefined && body.deliveryYear !== null
-        ? Number(body.deliveryYear)
-        : body.deliveryYear === null
-        ? undefined
-        : existing.deliveryYear,
-    featured: body.featured !== undefined ? Boolean(body.featured) : existing.featured,
-  };
-  // Never allow id mutation.
-  delete (patch as Record<string, unknown>).id;
-
-  const updated = updateOne("properties", id, patch);
-  if (!updated) return NextResponse.json({ error: "Not found" }, { status: 404 });
-
-  revalidatePath("/");
-  revalidatePath("/properties");
-  revalidatePath(`/properties/${existing.slug}`);
-  if (updated.slug !== existing.slug) revalidatePath(`/properties/${updated.slug}`);
-
-  return NextResponse.json({ item: updated });
 }
 
 export async function DELETE(
@@ -85,14 +93,14 @@ export async function DELETE(
   ctx: { params: Promise<{ id: string }> },
 ) {
   const { id } = await ctx.params;
-  const existing = readOne("properties", id);
-  if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  const ok = deleteOne("properties", id);
-  if (!ok) return NextResponse.json({ error: "Not found" }, { status: 404 });
-
-  revalidatePath("/");
-  revalidatePath("/properties");
-  revalidatePath(`/properties/${existing.slug}`);
-
-  return NextResponse.json({ ok: true });
+  try {
+    await dbAdminDeleteProperty(id);
+    revalidatePath("/", "layout");
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Server error" },
+      { status: 500 },
+    );
+  }
 }

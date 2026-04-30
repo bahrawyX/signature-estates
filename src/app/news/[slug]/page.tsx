@@ -3,17 +3,18 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { news, getArticle } from "@/data/news";
+import { getAllArticles, getArticle } from "@/data/news";
 import { Reveal } from "@/components/Reveal";
 import { NewsletterStrip } from "@/components/NewsletterStrip";
 
 export async function generateStaticParams() {
-  return news.map((n) => ({ slug: n.slug }));
+  const articles = await getAllArticles();
+  return articles.map((n) => ({ slug: n.slug }));
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const a = getArticle(slug);
+  const a = await getArticle(slug);
   if (!a) return {};
   return {
     title: a.title,
@@ -32,10 +33,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function ArticlePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const article = getArticle(slug);
+  const article = await getArticle(slug);
   if (!article) notFound();
 
-  const more = news.filter((n) => n.slug !== slug).slice(0, 3);
+  const allArticles = await getAllArticles();
+  const more = allArticles.filter((n) => n.slug !== slug).slice(0, 3);
 
   return (
     <>

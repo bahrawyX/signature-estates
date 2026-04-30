@@ -32,9 +32,6 @@ yarn-error.log*
 .env*
 !.env.example
 
-# NOTE: data-store/ is intentionally tracked — it is the JSON database
-# for the admin panel. Do NOT add it to this gitignore.
-
 # vercel
 .vercel
 

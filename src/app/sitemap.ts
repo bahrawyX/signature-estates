@@ -1,10 +1,15 @@
 import type { MetadataRoute } from "next";
-import { properties } from "@/data/properties";
-import { news } from "@/data/news";
+import { getAllProperties } from "@/data/properties";
+import { getAllArticles } from "@/data/news";
 
 const BASE = "https://signatureestates.eg";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const [properties, news] = await Promise.all([
+    getAllProperties(),
+    getAllArticles(),
+  ]);
+
   const now = new Date();
   const staticRoutes: MetadataRoute.Sitemap = [
     "",

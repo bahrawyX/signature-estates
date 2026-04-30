@@ -1,9 +1,9 @@
-import { readAll } from "@/lib/data-store";
+import { dbAdminGetAllLocations } from "@/lib/db";
 import { LocationsAdminClient } from "./LocationsAdminClient";
 
 export const dynamic = "force-dynamic";
 
-export default function AdminLocationsPage() {
-  const locations = readAll("locations");
+export default async function AdminLocationsPage() {
+  const locations = await dbAdminGetAllLocations();
   return <LocationsAdminClient initialItems={locations} />;
 }

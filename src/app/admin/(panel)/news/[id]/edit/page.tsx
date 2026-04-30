@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { readOne } from "@/lib/data-store";
+import { dbAdminGetArticle } from "@/lib/db";
 import { NewsForm } from "../../NewsForm";
 
 export const dynamic = "force-dynamic";
@@ -10,7 +10,7 @@ export default async function EditArticlePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const article = readOne("news", id);
+  const article = await dbAdminGetArticle(id);
   if (!article) notFound();
   return <NewsForm mode="edit" article={article} />;
 }

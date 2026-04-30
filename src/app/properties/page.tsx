@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { PropertiesClient } from "./PropertiesClient";
-import { properties } from "@/data/properties";
-import { locations } from "@/data/locations";
-import { developers } from "@/data/developers";
+import { getAllProperties } from "@/data/properties";
+import { getAllLocations } from "@/data/locations";
+import { getAllDevelopers } from "@/data/developers";
 
 export const metadata: Metadata = {
   title: "Properties",
@@ -11,10 +11,16 @@ export const metadata: Metadata = {
   alternates: { canonical: "/properties" },
 };
 
-// Always read fresh data from the JSON store.
+// Always read fresh data from Supabase.
 export const dynamic = "force-dynamic";
 
-export default function PropertiesPage() {
+export default async function PropertiesPage() {
+  const [properties, locations, developers] = await Promise.all([
+    getAllProperties(),
+    getAllLocations(),
+    getAllDevelopers(),
+  ]);
+
   return (
     <PropertiesClient
       properties={properties}

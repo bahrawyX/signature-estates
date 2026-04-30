@@ -104,9 +104,13 @@ The properties listing supports — in this order on the bar — Type, Location,
 Access the admin panel at `/admin`. Default password: see `.env.local`.
 
 ### Setup
-1. Copy `.env.example` to `.env.local` and set your `ADMIN_PASSWORD` and `ADMIN_SESSION_SECRET`.
-2. The `data-store/` directory contains your live data as JSON files (`properties.json`, `locations.json`, `developers.json`, `news.json`).
-3. **These files are your database — back them up regularly.**
+1. Copy `.env.example` to `.env.local` and fill in:
+   - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` from your Supabase project settings.
+   - `ADMIN_PASSWORD` — the password for the admin panel.
+   - `ADMIN_SESSION_SECRET` — a long random string for signing session cookies.
+2. Open the Supabase SQL Editor and run **`SUPABASE_SCHEMA.sql`** (creates the four tables, RLS, and triggers).
+3. Then run **`SUPABASE_SEED.sql`** (idempotent — populates locations, developers, properties, and news).
+4. Add the same Supabase + admin env variables to your Vercel project settings.
 
 ### Managing Content
 - **Properties** — Add, edit, remove listings with full details (type hierarchy, location, developer, specs, images, map, amenities).
@@ -124,12 +128,14 @@ https://images.unsplash.com/photo-XXXXX?w=1600&auto=format&fit=crop
 Find images at https://unsplash.com — the photo ID lives in the URL.
 
 ### Backup
-The `data-store/` directory **is** your database. To back up: copy the folder. To restore: replace the folder contents and redeploy. The folder is committed to git, so every deployment carries a snapshot.
+Use Supabase's built-in backups (Database → Backups). For point-in-time recovery, run `pg_dump` against the connection string from Supabase project settings.
 
 ### Architecture
-- **No external backend.** All admin operations write to JSON files via Next.js API routes (`src/app/api/admin/**`).
-- **Auth.** HMAC-signed session cookie (`se_admin_session`), 24-hour expiry. The middleware at `src/middleware.ts` protects `/admin/*` and `/api/admin/*` routes.
-- **Hot data.** The public site reads from the same JSON files via `fs.readFileSync`, with `revalidatePath` triggered after every write — so changes appear immediately.
+- **Database.** Supabase (hosted Postgres). Four tables: `locations`, `developers`, `properties`, `news`.
+- **Public reads.** The public site uses the anon key via `src/lib/supabase.ts`. Row Level Security policies allow `select` for everyone.
+- **Admin writes.** All `/api/admin/*` route handlers use the service role key (bypasses RLS), called only via the helpers in `src/lib/db.ts`. After every write, `revalidatePath('/', 'layout')` invalidates the public cache.
+- **Auth.** HMAC-signed session cookie (`se_admin_session`), 24-hour expiry. Middleware (`src/middleware.ts`) gates `/admin/*` and `/api/admin/*`.
+- **Single data layer.** Components and pages import `dbGet*` / `dbAdminGet*` from `src/lib/db.ts`. Nothing else talks to Supabase directly.
 
 ## Notes
 

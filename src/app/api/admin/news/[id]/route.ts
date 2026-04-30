@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
-import { readOne, updateOne, deleteOne, uniqueSlug } from "@/lib/data-store";
+import {
+  dbAdminGetArticle,
+  dbAdminUpdateArticle,
+  dbAdminDeleteArticle,
+  dbAdminUniqueSlug,
+} from "@/lib/db";
 import { slugify } from "@/lib/utils";
 import type { NewsArticle } from "@/lib/types";
 
@@ -11,9 +16,16 @@ export async function GET(
   ctx: { params: Promise<{ id: string }> },
 ) {
   const { id } = await ctx.params;
-  const item = readOne("news", id);
-  if (!item) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  return NextResponse.json({ item });
+  try {
+    const item = await dbAdminGetArticle(id);
+    if (!item) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json({ item });
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Server error" },
+      { status: 500 },
+    );
+  }
 }
 
 export async function PUT(
@@ -28,33 +40,39 @@ export async function PUT(
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const existing = readOne("news", id);
-  if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  try {
+    const existing = await dbAdminGetArticle(id);
+    if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  let slug = existing.slug;
-  if (body.slug && body.slug !== existing.slug) {
-    slug = uniqueSlug("news", slugify(body.slug), id);
-  } else if (body.title && body.title !== existing.title && !body.slug) {
-    slug = uniqueSlug("news", slugify(body.title), id);
+    let slug: string | undefined;
+    if (body.slug && body.slug !== existing.slug) {
+      slug = await dbAdminUniqueSlug("news", slugify(body.slug), id);
+    } else if (body.title && body.title !== existing.title && !body.slug) {
+      slug = await dbAdminUniqueSlug("news", slugify(body.title), id);
+    }
+
+    const patch: Partial<NewsArticle> = {
+      ...body,
+      ...(slug ? { slug } : {}),
+      readMinutes:
+        body.readMinutes !== undefined ? Number(body.readMinutes) : undefined,
+    };
+    delete (patch as Record<string, unknown>).id;
+    for (const k of Object.keys(patch)) {
+      if ((patch as Record<string, unknown>)[k] === undefined) {
+        delete (patch as Record<string, unknown>)[k];
+      }
+    }
+
+    const updated = await dbAdminUpdateArticle(id, patch);
+    revalidatePath("/", "layout");
+    return NextResponse.json({ item: updated });
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Server error" },
+      { status: 500 },
+    );
   }
-
-  const patch: Partial<NewsArticle> = {
-    ...body,
-    slug,
-    readMinutes:
-      body.readMinutes !== undefined ? Number(body.readMinutes) : existing.readMinutes,
-  };
-  delete (patch as Record<string, unknown>).id;
-
-  const updated = updateOne("news", id, patch);
-  if (!updated) return NextResponse.json({ error: "Not found" }, { status: 404 });
-
-  revalidatePath("/");
-  revalidatePath("/news");
-  revalidatePath(`/news/${existing.slug}`);
-  if (updated.slug !== existing.slug) revalidatePath(`/news/${updated.slug}`);
-
-  return NextResponse.json({ item: updated });
 }
 
 export async function DELETE(
@@ -62,12 +80,14 @@ export async function DELETE(
   ctx: { params: Promise<{ id: string }> },
 ) {
   const { id } = await ctx.params;
-  const existing = readOne("news", id);
-  if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  const ok = deleteOne("news", id);
-  if (!ok) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  revalidatePath("/");
-  revalidatePath("/news");
-  revalidatePath(`/news/${existing.slug}`);
-  return NextResponse.json({ ok: true });
+  try {
+    await dbAdminDeleteArticle(id);
+    revalidatePath("/", "layout");
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Server error" },
+      { status: 500 },
+    );
+  }
 }

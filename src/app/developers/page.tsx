@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { developers } from "@/data/developers";
+import { getAllDevelopers } from "@/data/developers";
 import { Reveal, StaggerGroup, StaggerItem } from "@/components/Reveal";
 
 export const metadata: Metadata = {
@@ -9,6 +9,8 @@ export const metadata: Metadata = {
   description:
     "Egypt's most trusted real-estate developers — ORA, Emaar Misr, TMG, SODIC, Palm Hills and more, curated by Signature Estates.",
 };
+
+export const dynamic = "force-dynamic";
 
 const DEVELOPER_IMAGES: Record<string, string> = {
   ora: "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=800&auto=format&fit=crop",
@@ -25,7 +27,8 @@ const DEVELOPER_IMAGES: Record<string, string> = {
   lmd: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&auto=format&fit=crop",
 };
 
-export default function DevelopersPage() {
+export default async function DevelopersPage() {
+  const developers = await getAllDevelopers();
   return (
     <>
       {/* ── Hero ─────────────────────────────────────────────── */}
