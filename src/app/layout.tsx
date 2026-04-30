@@ -5,6 +5,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { GoldCursor } from "@/components/GoldCursor";
 import { LenisProvider } from "@/components/LenisProvider";
+import { FloatingContact } from "@/components/FloatingContact";
 
 const display = Playfair_Display({
   subsets: ["latin"],
@@ -105,6 +106,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             {children}
           </main>
           <Footer />
+          <FloatingContact />
         </LenisProvider>
         <script
           type="application/ld+json"
