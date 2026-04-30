@@ -9,10 +9,11 @@ import { cn } from "@/lib/utils";
 
 const NAV = [
   { href: "/", label: "Home" },
+  { href: "/about", label: "About Us" },
+  { href: "/developers", label: "Developers" },
   { href: "/properties", label: "Properties" },
-  { href: "/about", label: "About" },
-  { href: "/news", label: "News" },
-  { href: "/contact", label: "Contact" },
+  { href: "/investment-plans", label: "Investment Plans" },
+  { href: "/contact", label: "Contact Us" },
 ];
 
 export function Navbar() {
@@ -45,7 +46,7 @@ export function Navbar() {
         {/* dark hero bg → no wrapper (variant="dark"); scrolled cream bg → dark pill (variant="light") */}
         <Logo variant={onHero ? "dark" : "light"} size="md" />
 
-        <nav className="hidden lg:flex items-center gap-10 xl:gap-12">
+        <nav className="hidden lg:flex items-center gap-6 xl:gap-9">
           {NAV.map((item) => {
             const active =
               pathname === item.href ||

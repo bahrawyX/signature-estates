@@ -8,7 +8,10 @@ import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -16,16 +19,15 @@ import { locations } from "@/data/locations";
 import { developers } from "@/data/developers";
 import { formatEGP, cn } from "@/lib/utils";
 
-const TYPES = [
-  "All",
-  "Apartment",
-  "Villa",
-  "Twin House",
-  "Penthouse",
-  "Townhouse",
-  "Chalet",
-  "Office",
-  "Retail",
+// ── Type hierarchy ──────────────────────────────────────────
+export const RES_APARTMENTS = ["Flat Apartment", "Loft", "Penthouse", "Garden Apartment", "Duplex"] as const;
+export const RES_VILLAS = ["Standalone Villa", "One Story Villa", "Town House", "Twin House", "Family House"] as const;
+export const COM_SHOPS = ["Retail", "F&B"] as const;
+export const COM_OTHER = ["Office", "Clinic"] as const;
+
+export const ALL_SPECIFIC_TYPES: string[] = [
+  ...RES_APARTMENTS, ...RES_VILLAS, "Chalet",
+  ...COM_SHOPS, ...COM_OTHER,
   "Land",
 ];
 const BEDROOMS = ["Any", "Studio", "1", "2", "3", "4", "5+"];
@@ -121,7 +123,7 @@ export function FilterBar({
     if (t || l) {
       onChange({
         ...filters,
-        type: t && TYPES.includes(t) ? t : filters.type,
+        type: t && ALL_SPECIFIC_TYPES.includes(t) ? t : filters.type,
         location: l && (locations.find((x) => x.id === l)) ? l : filters.location,
       });
     }
@@ -193,11 +195,66 @@ export function FilterBar({
 
   const fields = (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-x-6 gap-y-5 px-6 lg:px-12 pb-6">
-      <Field label="Type">
+      <Field label="Property Type">
         <Select value={filters.type} onValueChange={(v) => update("type", v)}>
           <SelectTrigger><SelectValue /></SelectTrigger>
-          <SelectContent>
-            {TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+          <SelectContent className="max-h-[380px]">
+            <SelectItem value="All">All Properties</SelectItem>
+
+            {/* ── RESIDENTIAL ─────────────────── */}
+            <SelectSeparator />
+            <SelectGroup>
+              <SelectLabel className="font-accent text-[9px] tracking-[0.22em] text-[var(--color-gold-dark)] uppercase pt-1">
+                Residential
+              </SelectLabel>
+              {/* Apartments */}
+              <SelectLabel className="pl-5 text-[10px] text-[var(--color-gray)] font-normal pb-0 pt-1">
+                Apartments
+              </SelectLabel>
+              {RES_APARTMENTS.map((t) => (
+                <SelectItem key={t} value={t} className="pl-8">{t}</SelectItem>
+              ))}
+              {/* Villas */}
+              <SelectLabel className="pl-5 text-[10px] text-[var(--color-gray)] font-normal pb-0 pt-1">
+                Villas
+              </SelectLabel>
+              {RES_VILLAS.map((t) => (
+                <SelectItem key={t} value={t} className="pl-8">
+                  {t === "Standalone Villa" ? "Standalone" : t === "One Story Villa" ? "One Story" : t}
+                </SelectItem>
+              ))}
+              {/* Beach & Resort */}
+              <SelectLabel className="pl-5 text-[10px] text-[var(--color-gray)] font-normal pb-0 pt-1">
+                Beach & Resort
+              </SelectLabel>
+              <SelectItem value="Chalet" className="pl-8">Chalet</SelectItem>
+            </SelectGroup>
+
+            {/* ── COMMERCIAL ──────────────────── */}
+            <SelectSeparator />
+            <SelectGroup>
+              <SelectLabel className="font-accent text-[9px] tracking-[0.22em] text-[var(--color-gold-dark)] uppercase pt-1">
+                Commercial
+              </SelectLabel>
+              {/* Shops */}
+              <SelectLabel className="pl-5 text-[10px] text-[var(--color-gray)] font-normal pb-0 pt-1">
+                Shops
+              </SelectLabel>
+              <SelectItem value="Retail" className="pl-8">Retail</SelectItem>
+              <SelectItem value="F&B" className="pl-8">Food & Beverage (F&B)</SelectItem>
+              {/* Other commercial */}
+              <SelectItem value="Office" className="pl-5">Offices</SelectItem>
+              <SelectItem value="Clinic" className="pl-5">Clinics</SelectItem>
+            </SelectGroup>
+
+            {/* ── OTHER ───────────────────────── */}
+            <SelectSeparator />
+            <SelectGroup>
+              <SelectLabel className="font-accent text-[9px] tracking-[0.22em] text-[var(--color-gray)] uppercase pt-1">
+                Other
+              </SelectLabel>
+              <SelectItem value="Land" className="pl-5">Land</SelectItem>
+            </SelectGroup>
           </SelectContent>
         </Select>
       </Field>

@@ -106,7 +106,7 @@ function Specs({ property, className }: { property: Property; className?: string
   const items: Array<{ icon: React.ReactNode; value: string; label: string }> = [];
   if (property.bedrooms > 0) {
     items.push({ icon: <Bed size={13} />, value: String(property.bedrooms), label: "Beds" });
-  } else if (property.type === "Apartment") {
+  } else if (["Flat Apartment", "Loft", "Garden Apartment", "Duplex"].includes(property.type)) {
     items.push({ icon: <Bed size={13} />, value: "Studio", label: "" });
   }
   if (property.bathrooms > 0) {

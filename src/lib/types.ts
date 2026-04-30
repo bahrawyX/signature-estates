@@ -1,12 +1,25 @@
 export type PropertyType =
-  | "Apartment"
-  | "Villa"
-  | "Twin House"
+  // Residential › Apartments
+  | "Flat Apartment"
+  | "Loft"
   | "Penthouse"
+  | "Garden Apartment"
+  | "Duplex"
+  // Residential › Villas
+  | "Standalone Villa"
+  | "One Story Villa"
+  | "Town House"
+  | "Twin House"
+  | "Family House"
+  // Residential › Beach & Resort
   | "Chalet"
-  | "Townhouse"
-  | "Office"
+  // Commercial › Shops
   | "Retail"
+  | "F&B"
+  // Commercial
+  | "Office"
+  | "Clinic"
+  // Other
   | "Land";
 
 export type PropertyStatus =
